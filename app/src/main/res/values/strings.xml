@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Campus Lost &amp; Found</string>
+    
+    <!-- Web Client ID untuk Google Sign-In -->
+    <string name="default_web_client_id">608664009990-1tv3e17992p204tmhmhctav126kj28ov.apps.googleusercontent.com</string>
+    
+    <!-- Navigation -->
+    <string name="nav_home">Beranda</string>
+    <string name="nav_add">Tambah</string>
+    <string name="nav_activity">Aktivitas</string>
+    <string name="nav_settings">Pengaturan</string>
+    
+    <!-- Home Screen -->
+    <string name="home_title">Laporan Terbaru</string>
+    <string name="home_subtitle">di Kampus</string>
+    <string name="home_search_hint">Cari barang (tas, HP, kunci…)</string>
+    <string name="filter_all">Semua</string>
+    <string name="filter_lost">Hilang</string>
+    <string name="filter_found">Ditemukan</string>
+    
+    <!-- Add Report -->
+    <string name="add_title">Tambah Laporan</string>
+    <string name="add_item_name">Nama Barang *</string>
+    <string name="add_category">Kategori *</string>
+    <string name="add_location">Lokasi *</string>
+    <string name="add_photo">Foto Barang</string>
+    <string name="add_whatsapp">Nomor WhatsApp *</string>
+    <string name="add_description">Deskripsi (Opsional)</string>
+    <string name="button_submit">Kirim Laporan</string>
+    <string name="button_cancel">Batal</string>
+    
+    <!-- Activity Screen -->
+    <string name="activity_title">Aktivitas Saya</string>
+    <string name="activity_subtitle">Kelola laporan Anda</string>
+    <string name="button_edit">Edit</string>
+    <string name="button_complete">Selesai</string>
+    <string name="button_delete">Hapus</string>
+    
+    <!-- Settings Screen -->
+    <string name="settings_title">Pengaturan</string>
+    <string name="settings_subtitle">Kelola preferensi aplikasi</string>
+    <string name="settings_theme">Tema</string>
+    <string name="settings_notifications">Notifikasi</string>
+    <string name="settings_privacy">Privasi</string>
+    <string name="settings_about">Tentang Aplikasi</string>
+    
+    <!-- General -->
+    <string name="status_lost">Hilang</string>
+    <string name="status_found">Ditemukan</string>
+    <string name="button_contact">Hubungi</string>
+    <string name="empty_state_title">Belum ada laporan</string>
+    <string name="empty_state_subtitle">Jadilah yang pertama melaporkan</string>
+    <string name="loading">Memuat…</string>
+    
+    <!-- Notifications -->
+    <string name="notification_title">Notifikasi</string>
+    <string name="notification_empty">Belum ada notifikasi</string>
+    <string name="notification_empty_subtitle">Notifikasi akan muncul di sini</string>
+</resources>
+

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="ic_launcher_background">#2196F3</color>
+    <!-- Splash opening colors: Option C - Navy to Teal -->
+    <color name="splash_opening_top">#0B2545</color>
+    <color name="splash_opening_bottom">#0F8F8A</color>
+    <color name="splash_opening_accent">#1ED3C6</color>
+</resources>
+
