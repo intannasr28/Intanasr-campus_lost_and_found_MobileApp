@@ -31,12 +31,11 @@ fun SuccessCelebrationDialog(
     var showConfetti by remember { mutableStateOf(false) }
     
     LaunchedEffect(Unit) {
-        delay(100)
+        delay(600)  // Delay awal diperlambat untuk entrance lebih dramatis
         showContent = true
-        delay(200)
+        delay(800)  // Beri waktu lebih lama untuk user lihat animasi
         showConfetti = true
-        delay(3000) // Auto-dismiss after 3 seconds
-        onDismiss()
+        // User kontrol penuh kapan ingin menutup dialog
     }
     
     Dialog(onDismissRequest = onDismiss) {
@@ -55,7 +54,7 @@ fun SuccessCelebrationDialog(
                     .background(
                         brush = Brush.verticalGradient(
                             colors = listOf(
-                                Color(0xFF00897B).copy(alpha = 0.1f),
+                                MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f),
                                 Color.Transparent
                             )
                         )
@@ -73,8 +72,11 @@ fun SuccessCelebrationDialog(
                             animationSpec = spring(
                                 dampingRatio = Spring.DampingRatioMediumBouncy,
                                 stiffness = Spring.StiffnessLow
-                            )
-                        ) + fadeIn()
+                            ),
+                            initialScale = 0.3f  // Mulai dari lebih kecil untuk efek dramatis
+                        ) + fadeIn(
+                            animationSpec = tween(600)  // Fade in lebih smooth
+                        )
                     ) {
                         Column(
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -88,7 +90,7 @@ fun SuccessCelebrationDialog(
                             text = "🎉 Berhasil!",
                             style = MaterialTheme.typography.headlineMedium,
                             fontWeight = FontWeight.Bold,
-                            color = Color(0xFF00897B),
+                            color = MaterialTheme.colorScheme.primary,
                             textAlign = TextAlign.Center
                         )
                         
@@ -117,17 +119,21 @@ fun SuccessCelebrationDialog(
                         Column(
                             verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
+                            val primaryColor = MaterialTheme.colorScheme.primary
                             SuccessFeatureRow(
                                 icon = Icons.Default.Visibility,
-                                text = "Laporan dapat dilihat semua pengguna"
+                                text = "Laporan dapat dilihat semua pengguna",
+                                iconColor = primaryColor
                             )
                             SuccessFeatureRow(
                                 icon = Icons.Default.Notifications,
-                                text = "Notifikasi akan dikirim ke pelapor"
+                                text = "Notifikasi akan dikirim ke pelapor",
+                                iconColor = primaryColor
                             )
                             SuccessFeatureRow(
                                 icon = Icons.Default.Phone,
-                                text = "Kontak dapat dihubungi via WhatsApp"
+                                text = "Kontak dapat dihubungi via WhatsApp",
+                                iconColor = primaryColor
                             )
                         }
                         
@@ -140,7 +146,7 @@ fun SuccessCelebrationDialog(
                                 .fillMaxWidth()
                                 .height(48.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xFF00897B)
+                                containerColor = MaterialTheme.colorScheme.primary
                             ),
                             shape = RoundedCornerShape(12.dp)
                         ) {
@@ -150,8 +156,10 @@ fun SuccessCelebrationDialog(
                                 fontSize = 16.sp
                             )
                         }
+                        }
                     }
-                }                }            }
+                }
+            }
         }
     }
 }
@@ -159,10 +167,10 @@ fun SuccessCelebrationDialog(
 @Composable
 private fun SuccessIcon(animate: Boolean) {
     val scale by animateFloatAsState(
-        targetValue = if (animate) 1.2f else 1.0f,
+        targetValue = if (animate) 1.3f else 1.0f,
         animationSpec = repeatable(
-            iterations = 3,
-            animation = tween(400),
+            iterations = 6,  // Lebih banyak bouncing
+            animation = tween(600, easing = FastOutSlowInEasing),  // Durasi lebih lama
             repeatMode = RepeatMode.Reverse
         ),
         label = "Icon Scale"
@@ -170,7 +178,7 @@ private fun SuccessIcon(animate: Boolean) {
     
     val rotation by animateFloatAsState(
         targetValue = if (animate) 360f else 0f,
-        animationSpec = tween(800, easing = FastOutSlowInEasing),
+        animationSpec = tween(1500, easing = FastOutSlowInEasing),  // Rotasi lebih smooth dan lambat
         label = "Icon Rotation"
     )
     
@@ -182,8 +190,8 @@ private fun SuccessIcon(animate: Boolean) {
             .background(
                 brush = Brush.linearGradient(
                     colors = listOf(
-                        Color(0xFF00897B),
-                        Color(0xFF26A69A)
+                        MaterialTheme.colorScheme.primary,
+                        MaterialTheme.colorScheme.secondary
                     )
                 )
             ),
@@ -220,14 +228,14 @@ private fun ConfettiPiece(delay: Long) {
     }
     
     val offsetY by animateDpAsState(
-        targetValue = if (startAnimation) 60.dp else 0.dp,
-        animationSpec = tween(1000, easing = FastOutSlowInEasing),
+        targetValue = if (startAnimation) 100.dp else 0.dp,  // Jatuh lebih jauh
+        animationSpec = tween(2000, easing = FastOutSlowInEasing),  // Durasi lebih lama
         label = "Confetti Fall"
     )
     
     val alpha by animateFloatAsState(
         targetValue = if (startAnimation) 0f else 1f,
-        animationSpec = tween(1000),
+        animationSpec = tween(2000),  // Fade out lebih smooth
         label = "Confetti Fade"
     )
     
@@ -251,7 +259,8 @@ private fun ConfettiPiece(delay: Long) {
 @Composable
 private fun SuccessFeatureRow(
     icon: androidx.compose.ui.graphics.vector.ImageVector,
-    text: String
+    text: String,
+    iconColor: Color
 ) {
     Row(
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -261,14 +270,14 @@ private fun SuccessFeatureRow(
             modifier = Modifier
                 .size(32.dp)
                 .clip(CircleShape)
-                .background(Color(0xFF00897B).copy(alpha = 0.15f)),
+                .background(iconColor.copy(alpha = 0.15f)),
             contentAlignment = Alignment.Center
         ) {
             Icon(
                 icon,
                 contentDescription = null,
                 modifier = Modifier.size(18.dp),
-                tint = Color(0xFF00897B)
+                tint = iconColor
             )
         }
         Text(

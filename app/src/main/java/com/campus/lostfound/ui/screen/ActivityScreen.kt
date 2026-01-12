@@ -36,17 +36,24 @@ import com.campus.lostfound.util.rememberImagePicker
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ActivityScreen() {
+fun ActivityScreen(
+    onNavigateToDetail: ((String) -> Unit)? = null
+) {
     val context = LocalContext.current
     val viewModel = remember { ActivityViewModel(context) }
-    ActivityScreenContent(context = context, viewModel = viewModel)
+    ActivityScreenContent(
+        context = context, 
+        viewModel = viewModel,
+        onNavigateToDetail = onNavigateToDetail
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ActivityScreenContent(
     context: android.content.Context,
-    viewModel: ActivityViewModel
+    viewModel: ActivityViewModel,
+    onNavigateToDetail: ((String) -> Unit)? = null
 ) {
     val myReports by viewModel.myReports.collectAsState(initial = emptyList())
     val historyWithDate by viewModel.historyWithDate.collectAsState(initial = emptyList())
@@ -138,7 +145,8 @@ private fun ActivityScreenContent(
                                 context = context,
                                 onEdit = { showEditDialog = item },
                                 onComplete = { showCompleteDialog = item },
-                                onDelete = { showDeleteDialog = item }
+                                onDelete = { showDeleteDialog = item },
+                                onNavigateToDetail = onNavigateToDetail
                             )
                         }
                     }
@@ -153,7 +161,8 @@ private fun ActivityScreenContent(
                             enter = fadeIn(animationSpec = tween(300, delayMillis = index * 50)) + slideInVertically(initialOffsetY = { it / 2 }, animationSpec = tween(300, delayMillis = index * 50))) {
                             HistoryReportCard(
                                 completedReport = completedReport,
-                                context = context
+                                context = context,
+                                onNavigateToDetail = onNavigateToDetail
                             )
                         }
                     }
@@ -254,7 +263,8 @@ private fun ActiveReportCard(
     context: android.content.Context,
     onEdit: () -> Unit,
     onComplete: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onNavigateToDetail: ((String) -> Unit)? = null
 ) {
     Card(
         modifier = Modifier
@@ -278,6 +288,9 @@ private fun ActiveReportCard(
                         itemName = item.itemName,
                         type = if (item.type == com.campus.lostfound.data.model.ItemType.LOST) "barang hilang" else "barang ditemukan"
                     )
+                },
+                onCardClick = {
+                    onNavigateToDetail?.invoke(item.id)
                 },
                 modifier = Modifier.fillMaxWidth()
             )
@@ -337,7 +350,8 @@ private fun ActiveReportCard(
 @Composable
 private fun HistoryReportCard(
     completedReport: LocalHistoryRepository.CompletedReport,
-    context: android.content.Context
+    context: android.content.Context,
+    onNavigateToDetail: ((String) -> Unit)? = null
 ) {
     val item = completedReport.item
     
@@ -390,6 +404,9 @@ private fun HistoryReportCard(
             ItemCard(
                 item = item,
                 onContactClick = { },
+                onCardClick = {
+                    onNavigateToDetail?.invoke(item.id)
+                },
                 modifier = Modifier.fillMaxWidth()
             )
 

@@ -173,14 +173,14 @@ fun createDarkColorScheme(themeColor: ThemeColor) = darkColorScheme(
 )
 
 // Legacy color schemes for backward compatibility
-private val DarkColorScheme = createDarkColorScheme(ThemeColor.DEFAULT)
-private val LightColorScheme = createLightColorScheme(ThemeColor.DEFAULT)
+private val DarkColorScheme = createDarkColorScheme(ThemeColor.TEAL)
+private val LightColorScheme = createLightColorScheme(ThemeColor.TEAL)
 
 
 @Composable
 fun CampusLostFoundTheme(
     themeMode: String = "system", // "system", "light", "dark"
-    themeColor: ThemeColor = ThemeColor.DEFAULT,
+    themeColor: ThemeColor = ThemeColor.TEAL,
     dynamicColor: Boolean = false, // Disabled by default to use custom colors
     content: @Composable () -> Unit
 ) {

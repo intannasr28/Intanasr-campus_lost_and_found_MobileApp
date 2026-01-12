@@ -38,8 +38,7 @@ data class BottomNavItem(
 fun BottomNavigationBar(
     currentRoute: String,
     onNavigate: (String) -> Unit,
-    modifier: Modifier = Modifier,
-    notificationBadgeCount: Int = 0
+    modifier: Modifier = Modifier
 ) {
     val items = listOf(
         BottomNavItem(
@@ -133,40 +132,13 @@ fun BottomNavigationBar(
                                     )
                                 }
                             } else {
-                                // Badge for Activity screen
-                                BadgedBox(
-                                    badge = {
-                                        if (item.screen == Screen.Activity && notificationBadgeCount > 0) {
-                                            val badgeScale by animateFloatAsState(
-                                                targetValue = 1f,
-                                                animationSpec = spring(
-                                                    dampingRatio = Spring.DampingRatioMediumBouncy,
-                                                    stiffness = Spring.StiffnessLow
-                                                ),
-                                                label = "badgeScale"
-                                            )
-                                            Badge(
-                                                modifier = Modifier.scale(badgeScale),
-                                                containerColor = MaterialTheme.colorScheme.error,
-                                                contentColor = MaterialTheme.colorScheme.onError
-                                            ) {
-                                                Text(
-                                                    text = if (notificationBadgeCount > 99) "99+" else notificationBadgeCount.toString(),
-                                                    style = MaterialTheme.typography.labelSmall,
-                                                    fontSize = 10.sp,
-                                                    fontWeight = FontWeight.Bold
-                                                )
-                                            }
-                                        }
-                                    }
-                                ) {
-                                    Icon(
-                                        imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                                        contentDescription = item.label,
-                                        tint = animatedColor,
-                                        modifier = Modifier.size(24.dp)
-                                    )
-                                }
+                                // Regular icon untuk semua tab lain
+                                Icon(
+                                    imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
+                                    contentDescription = item.label,
+                                    tint = animatedColor,
+                                    modifier = Modifier.size(24.dp)
+                                )
                             }
                         }
                     },

@@ -33,11 +33,6 @@ import com.campus.lostfound.navigation.Screen
 import com.campus.lostfound.ui.components.BottomNavigationBar
 import com.campus.lostfound.ui.theme.CampusLostFoundTheme
 import com.campus.lostfound.ui.theme.ThemeColor
-import com.campus.lostfound.ui.viewmodel.NotificationViewModel
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.campus.lostfound.service.LocalNotificationService
 import com.campus.lostfound.service.RealtimeNotificationListener
 import com.campus.lostfound.service.OneSignalNotificationService
@@ -287,18 +282,6 @@ fun MainScreen() {
         }
     }
     
-    // Notification ViewModel for badge count
-    val notificationViewModel: NotificationViewModel = viewModel(
-        factory = object : ViewModelProvider.Factory {
-            @Suppress("UNCHECKED_CAST")
-            override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                return NotificationViewModel(context) as T
-            }
-        }
-    )
-    val notifications by notificationViewModel.notifications.collectAsStateWithLifecycle()
-    val unreadCount = notifications.count { !it.read }
-    
     // Only show bottom navigation on main app sections
     val showBottomBar = when {
         currentRoute == Screen.Home.route -> true
@@ -325,8 +308,7 @@ fun MainScreen() {
                             launchSingleTop = true
                             restoreState = true
                         }
-                    },
-                    notificationBadgeCount = unreadCount
+                    }
                 )
             }
         }

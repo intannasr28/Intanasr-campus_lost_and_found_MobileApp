@@ -16,7 +16,7 @@ data class SettingsUiState(
     val notificationsEnabled: Boolean = true,
     val soundEnabled: Boolean = true,
     val themeMode: String = "system", // "system", "light", "dark"
-    val themeColor: ThemeColor = ThemeColor.DEFAULT
+    val themeColor: ThemeColor = ThemeColor.TEAL
 )
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
@@ -31,7 +31,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         val themeColor = try {
             ThemeColor.valueOf(colorName)
         } catch (e: Exception) {
-            ThemeColor.DEFAULT
+            ThemeColor.TEAL
         }
         SettingsUiState(
             notificationsEnabled = notifications,

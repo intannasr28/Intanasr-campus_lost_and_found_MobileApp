@@ -76,7 +76,6 @@ data class NotificationItem(
 
 enum class NotificationType(val displayName: String, val iconName: String) {
     NEW_REPORT("Laporan Baru", "description"),
-    CONTACTED("Dihubungi", "phone"),
     STATUS_CHANGED("Status Berubah", "info"),
     ITEM_FOUND("Barang Ditemukan", "check_circle"),
     ITEM_LOST("Barang Hilang", "search"),

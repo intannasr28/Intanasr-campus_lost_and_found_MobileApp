@@ -171,9 +171,10 @@ fun AddReportScreen(
         viewModel.setImageUri(uri)
     }
     
+    // Show success dialog when report submitted successfully
     LaunchedEffect(uiState.isSuccess) {
         if (uiState.isSuccess) {
-            onNavigateBack()
+            showSuccessDialog = true
             viewModel.resetState()
         }
     }

@@ -10,11 +10,16 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.tasks.await
 
 class ActivityViewModel(
     private val context: Context,
     private val repository: LostFoundRepository = LostFoundRepository(context)
 ) : ViewModel() {
+    
+    private val scope = CoroutineScope(Dispatchers.IO)
     
     private val _myReports = MutableStateFlow<List<LostFoundItem>>(emptyList())
     val myReports: StateFlow<List<LostFoundItem>> = _myReports.asStateFlow()
@@ -152,6 +157,42 @@ class ActivityViewModel(
             result.fold(
                 onSuccess = {
                     _isLoading.value = false
+                    
+                    // Broadcast notifikasi STATUS_CHANGED ke semua user
+                    val localNotifRepo = com.campus.lostfound.data.LocalNotificationRepository.getInstance(context)
+                    scope.launch {
+                        try {
+                            // Get item details untuk membuat notifikasi yang informatif
+                            val itemSnapshot = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+                                .collection("items")
+                                .document(itemId)
+                                .get()
+                                .await()
+                            
+                            val item = itemSnapshot.toObject(com.campus.lostfound.data.model.LostFoundItem::class.java)
+                            if (item != null) {
+                                val changes = buildString {
+                                    if (itemName != null) append("nama, ")
+                                    if (category != null) append("kategori, ")
+                                    if (location != null) append("lokasi, ")
+                                    if (description != null) append("deskripsi, ")
+                                    if (whatsappNumber != null) append("kontak, ")
+                                    if (imageUri != null) append("foto, ")
+                                }.removeSuffix(", ")
+                                
+                                localNotifRepo.addNotification(
+                                    title = "🔄 Laporan Diperbarui",
+                                    body = "\"${item.itemName}\" - Perubahan: $changes",
+                                    type = "STATUS_CHANGED",
+                                    itemId = itemId
+                                )
+                                android.util.Log.d("ActivityViewModel", "STATUS_CHANGED notification sent for: ${item.itemName}")
+                            }
+                        } catch (e: Exception) {
+                            android.util.Log.e("ActivityViewModel", "Failed to send status notification", e)
+                        }
+                    }
+                    
                     onSuccess()
                 },
                 onFailure = { error ->

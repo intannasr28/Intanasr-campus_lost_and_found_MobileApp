@@ -2,7 +2,9 @@ package com.campus.lostfound.ui.screen
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,6 +12,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
@@ -26,6 +29,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import kotlinx.coroutines.launch
 import com.campus.lostfound.data.model.NotificationItem
 import com.campus.lostfound.data.model.NotificationType
 import com.campus.lostfound.ui.theme.FoundGreen
@@ -52,21 +56,154 @@ fun NotificationScreen(
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
     val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
     
+    var showClearAllDialog by remember { mutableStateOf(false) }
+    var showDeleteAllMenu by remember { mutableStateOf(false) }
+    var isSelectionMode by remember { mutableStateOf(false) }
+    var selectedNotifications by remember { mutableStateOf(setOf<String>()) }
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+    
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
-                title = { Text("Notifikasi", fontWeight = FontWeight.Bold) },
+                title = { 
+                    if (isSelectionMode) {
+                        Text("${selectedNotifications.size} dipilih", fontWeight = FontWeight.Bold)
+                    } else {
+                        Text("Notifikasi", fontWeight = FontWeight.Bold)
+                    }
+                },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Back")
+                    IconButton(onClick = {
+                        if (isSelectionMode) {
+                            isSelectionMode = false
+                            selectedNotifications = setOf()
+                        } else {
+                            onNavigateBack()
+                        }
+                    }) {
+                        Icon(
+                            if (isSelectionMode) Icons.Default.Close else Icons.Default.ArrowBack,
+                            contentDescription = if (isSelectionMode) "Cancel" else "Back"
+                        )
                     }
                 },
                 actions = {
-                    if (notifications.isNotEmpty()) {
-                        TextButton(
-                            onClick = { viewModel.markAllAsRead() }
+                    if (isSelectionMode) {
+                        // Select all button
+                        IconButton(
+                            onClick = {
+                                selectedNotifications = if (selectedNotifications.size == notifications.size) {
+                                    setOf()
+                                } else {
+                                    notifications.map { it.id }.toSet()
+                                }
+                            }
                         ) {
-                            Text("Tandai Semua Dibaca")
+                            Icon(
+                                if (selectedNotifications.size == notifications.size) 
+                                    Icons.Default.CheckBox 
+                                else 
+                                    Icons.Default.CheckBoxOutlineBlank,
+                                contentDescription = "Select all"
+                            )
+                        }
+                        
+                        // Delete selected button
+                        if (selectedNotifications.isNotEmpty()) {
+                            IconButton(
+                                onClick = {
+                                    selectedNotifications.forEach { id ->
+                                        viewModel.deleteNotification(id)
+                                    }
+                                    scope.launch {
+                                        snackbarHostState.showSnackbar(
+                                            "${selectedNotifications.size} notifikasi berhasil dihapus",
+                                            duration = SnackbarDuration.Short
+                                        )
+                                    }
+                                    selectedNotifications = setOf()
+                                    isSelectionMode = false
+                                }
+                            ) {
+                                Icon(
+                                    Icons.Default.Delete,
+                                    contentDescription = "Hapus yang dipilih",
+                                    tint = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        }
+                    } else if (notifications.isNotEmpty()) {
+                        // Selection mode toggle
+                        IconButton(onClick = { isSelectionMode = true }) {
+                            Icon(
+                                Icons.Default.Checklist,
+                                contentDescription = "Pilih notifikasi"
+                            )
+                        }
+                        
+                        // Mark all as read button
+                        IconButton(onClick = { viewModel.markAllAsRead() }) {
+                            Icon(
+                                Icons.Default.DoneAll,
+                                contentDescription = "Tandai semua dibaca",
+                                tint = MaterialTheme.colorScheme.primary
+                            )
+                        }
+                        
+                        // Delete all button (with menu)
+                        Box {
+                            IconButton(onClick = { showDeleteAllMenu = true }) {
+                                Icon(
+                                    Icons.Default.MoreVert,
+                                    contentDescription = "Menu lainnya"
+                                )
+                            }
+                            
+                            DropdownMenu(
+                                expanded = showDeleteAllMenu,
+                                onDismissRequest = { showDeleteAllMenu = false }
+                            ) {
+                                DropdownMenuItem(
+                                    text = { 
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                Icons.Default.DeleteSweep,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.error
+                                            )
+                                            Text("Hapus Semua Notifikasi")
+                                        }
+                                    },
+                                    onClick = {
+                                        showDeleteAllMenu = false
+                                        showClearAllDialog = true
+                                    }
+                                )
+                                DropdownMenuItem(
+                                    text = { 
+                                        Row(
+                                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Icon(
+                                                Icons.Default.Checklist,
+                                                contentDescription = null,
+                                                tint = MaterialTheme.colorScheme.primary
+                                            )
+                                            Text("Pilih Notifikasi")
+                                        }
+                                    },
+                                    onClick = {
+                                        showDeleteAllMenu = false
+                                        isSelectionMode = true
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -152,10 +289,37 @@ fun NotificationScreen(
                     ) {
                         NotificationItemCard(
                             notification = notification,
+                            isSelectionMode = isSelectionMode,
+                            isSelected = selectedNotifications.contains(notification.id),
+                            onSelectionChange = { selected ->
+                                selectedNotifications = if (selected) {
+                                    selectedNotifications + notification.id
+                                } else {
+                                    selectedNotifications - notification.id
+                                }
+                            },
                             onClick = {
-                                viewModel.markAsRead(notification.id)
-                                notification.itemId?.let { itemId ->
-                                    onNavigateToDetail?.invoke(itemId)
+                                if (isSelectionMode) {
+                                    val selected = !selectedNotifications.contains(notification.id)
+                                    selectedNotifications = if (selected) {
+                                        selectedNotifications + notification.id
+                                    } else {
+                                        selectedNotifications - notification.id
+                                    }
+                                } else {
+                                    viewModel.markAsRead(notification.id)
+                                    notification.itemId?.let { itemId ->
+                                        onNavigateToDetail?.invoke(itemId)
+                                    }
+                                }
+                            },
+                            onDelete = {
+                                viewModel.deleteNotification(notification.id)
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        "\"${notification.title}\" berhasil dihapus",
+                                        duration = SnackbarDuration.Short
+                                    )
                                 }
                             }
                         )
@@ -164,15 +328,99 @@ fun NotificationScreen(
             }
         }
     }
+    
+    // Clear All Notifications Confirmation Dialog
+    if (showClearAllDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearAllDialog = false },
+            icon = {
+                Icon(
+                    Icons.Default.DeleteSweep,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(40.dp)
+                )
+            },
+            title = {
+                Text(
+                    "Hapus Semua Notifikasi?",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        "Apakah Anda yakin ingin menghapus semua notifikasi?",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Info,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.size(20.dp)
+                            )
+                            Text(
+                                "Tindakan ini hanya menghapus notifikasi di perangkat Anda. Pengguna lain tidak terpengaruh.",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val count = notifications.size
+                        viewModel.clearAllNotifications()
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                "$count notifikasi berhasil dihapus",
+                                duration = SnackbarDuration.Short
+                            )
+                        }
+                        showClearAllDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Hapus Semua")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearAllDialog = false }) {
+                    Text("Batal")
+                }
+            }
+        )
+    }
 }
 
 @Composable
 fun NotificationItemCard(
     notification: NotificationItem,
-    onClick: () -> Unit
+    isSelectionMode: Boolean = false,
+    isSelected: Boolean = false,
+    onSelectionChange: ((Boolean) -> Unit)? = null,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
 ) {
     val icon = remember(notification.type) { getNotificationIcon(notification.type) }
     val iconColor = getNotificationIconColor(notification.type)
+    var showDeleteDialog by remember { mutableStateOf(false) }
     
     Card(
         modifier = Modifier
@@ -194,6 +442,15 @@ fun NotificationItemCard(
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.Top
         ) {
+            // Checkbox jika dalam selection mode
+            if (isSelectionMode) {
+                Checkbox(
+                    checked = isSelected,
+                    onCheckedChange = onSelectionChange,
+                    modifier = Modifier.align(Alignment.CenterVertically)
+                )
+            }
+            
             // Icon kiri dengan warna sesuai type
             Surface(
                 shape = CircleShape,
@@ -244,47 +501,111 @@ fun NotificationItemCard(
                 )
             }
             
-            // Unread indicator
-            if (!notification.read) {
-                Box(
-                    modifier = Modifier
-                        .size(8.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                )
+            // Right side: Delete button + Unread indicator
+            if (!isSelectionMode) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Delete button (trash icon)
+                    IconButton(
+                        onClick = { showDeleteDialog = true },
+                        modifier = Modifier.size(32.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Delete,
+                            contentDescription = "Hapus notifikasi",
+                            tint = MaterialTheme.colorScheme.error.copy(alpha = 0.7f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                
+                    // Unread indicator
+                    if (!notification.read) {
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.primary)
+                        )
+                    }
+                }
             }
         }
+    }
+    
+    // Delete Confirmation Dialog
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            icon = {
+                Icon(
+                    Icons.Default.Delete,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.size(32.dp)
+                )
+            },
+            title = {
+                Text(
+                    "Hapus Notifikasi?",
+                    fontWeight = FontWeight.Bold
+                )
+            },
+            text = {
+                Text(
+                    "Apakah Anda yakin ingin menghapus notifikasi ini? Tindakan ini hanya akan menghapus notifikasi di perangkat ini.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        onDelete()
+                        showDeleteDialog = false
+                    },
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    )
+                ) {
+                    Text("Hapus")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDeleteDialog = false }) {
+                    Text("Batal")
+                }
+            }
+        )
     }
 }
 
 fun getNotificationIcon(type: NotificationType): ImageVector {
     return when (type) {
-        NotificationType.NEW_REPORT -> Icons.Default.Description
-        NotificationType.CONTACTED -> Icons.Default.Phone
-        NotificationType.STATUS_CHANGED -> Icons.Default.Info
-        NotificationType.ITEM_FOUND -> Icons.Default.CheckCircle
-        NotificationType.ITEM_LOST -> Icons.Default.Search
-        NotificationType.ITEM_COMPLETED -> Icons.Default.Verified
-        NotificationType.ITEM_RETURNED -> Icons.Default.Handshake
-        NotificationType.MATCH_FOUND -> Icons.Default.Link
-        NotificationType.REMINDER -> Icons.Default.Alarm
-        NotificationType.OTHER -> Icons.Default.Notifications
+        NotificationType.NEW_REPORT -> Icons.Default.FiberNew  // Icon "NEW" lebih jelas
+        NotificationType.STATUS_CHANGED -> Icons.Default.Sync  // Icon sinkronisasi untuk perubahan
+        NotificationType.ITEM_FOUND -> Icons.Default.CheckCircle  // Centang hijau
+        NotificationType.ITEM_LOST -> Icons.Default.ErrorOutline  // Icon warning untuk kehilangan
+        NotificationType.ITEM_COMPLETED -> Icons.Default.Verified  // Icon verifikasi dengan centang
+        NotificationType.ITEM_RETURNED -> Icons.Default.AssignmentTurnedIn  // Icon dokumen selesai
+        NotificationType.MATCH_FOUND -> Icons.Default.TravelExplore  // Icon pencarian menemukan
+        NotificationType.REMINDER -> Icons.Default.NotificationImportant  // Bell dengan tanda seru
+        NotificationType.OTHER -> Icons.Default.Notifications  // Bell biasa
     }
 }
 
 @Composable
 fun getNotificationIconColor(type: NotificationType): Color {
     return when (type) {
-        NotificationType.NEW_REPORT -> MaterialTheme.colorScheme.primary
-        NotificationType.CONTACTED -> MaterialTheme.colorScheme.secondary
-        NotificationType.STATUS_CHANGED -> MaterialTheme.colorScheme.tertiary
-        NotificationType.ITEM_FOUND -> FoundGreen
-        NotificationType.ITEM_LOST -> LostRed
-        NotificationType.ITEM_COMPLETED -> Color(0xFF4CAF50)
-        NotificationType.ITEM_RETURNED -> Color(0xFF2196F3)
-        NotificationType.MATCH_FOUND -> Color(0xFF9C27B0)
-        NotificationType.REMINDER -> Color(0xFFFF9800)
-        NotificationType.OTHER -> MaterialTheme.colorScheme.onSurfaceVariant
+        NotificationType.NEW_REPORT -> MaterialTheme.colorScheme.primary  // Biru/Teal
+        NotificationType.STATUS_CHANGED -> Color(0xFFFF9800)  // Orange untuk perubahan
+        NotificationType.ITEM_FOUND -> FoundGreen  // Hijau terang
+        NotificationType.ITEM_LOST -> LostRed  // Merah untuk kehilangan
+        NotificationType.ITEM_COMPLETED -> Color(0xFF4CAF50)  // Hijau sukses
+        NotificationType.ITEM_RETURNED -> Color(0xFF00BCD4)  // Cyan untuk pengembalian
+        NotificationType.MATCH_FOUND -> Color(0xFF9C27B0)  // Ungu untuk kecocokan
+        NotificationType.REMINDER -> Color(0xFFFF5722)  // Orange merah untuk reminder
+        NotificationType.OTHER -> MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
     }
 }
 

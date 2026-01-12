@@ -19,8 +19,9 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector)
     object Add : Screen("add", "Tambah", Icons.Filled.Add)
     object Activity : Screen("activity", "Aktivitas", Icons.Filled.List)
     object Settings : Screen("settings", "Pengaturan", Icons.Filled.Settings)
-    object Detail : Screen("detail/{itemId}", "Detail", Icons.Filled.Info) {
-        fun createRoute(itemId: String) = "detail/$itemId"
+    object Detail : Screen("detail/{itemId}?fromActivityScreen={fromActivityScreen}", "Detail", Icons.Filled.Info) {
+        fun createRoute(itemId: String, fromActivityScreen: Boolean = false) = 
+            "detail/$itemId?fromActivityScreen=$fromActivityScreen"
     }
     object Notifications : Screen("notifications", "Notifikasi", Icons.Filled.Notifications)
     object Explore : Screen("explore", "Jelajah", Icons.Filled.Explore)
@@ -97,7 +98,11 @@ fun NavigationGraph(navController: NavHostController) {
                 fadeOut(animationSpec = tween(300))
             }
         ) {
-            ActivityScreen()
+            ActivityScreen(
+                onNavigateToDetail = { itemId ->
+                    navController.navigate(Screen.Detail.createRoute(itemId, fromActivityScreen = true))
+                }
+            )
         }
         
         composable(
@@ -143,7 +148,11 @@ fun NavigationGraph(navController: NavHostController) {
         composable(
             route = Screen.Detail.route,
             arguments = listOf(
-                navArgument("itemId") { type = NavType.StringType }
+                navArgument("itemId") { type = NavType.StringType },
+                navArgument("fromActivityScreen") { 
+                    type = NavType.BoolType
+                    defaultValue = false
+                }
             ),
             enterTransition = {
                 slideInVertically(
@@ -159,8 +168,10 @@ fun NavigationGraph(navController: NavHostController) {
             }
         ) { backStackEntry ->
             val itemId = backStackEntry.arguments?.getString("itemId") ?: ""
+            val fromActivityScreen = backStackEntry.arguments?.getBoolean("fromActivityScreen") ?: false
             DetailScreen(
                 itemId = itemId,
+                fromActivityScreen = fromActivityScreen,
                 onNavigateBack = {
                     navController.popBackStack()
                 },

@@ -32,9 +32,16 @@ Aplikasi Android modern untuk membantu mahasiswa kampus melaporkan dan menemukan
 - Dialog konfirmasi sebelum hapus
 
 ### 🔔 Notifikasi
-- Icon lonceng di header Beranda
-- Dialog notifikasi dengan empty state
-- Ready untuk implementasi push notification
+- Icon lonceng di header Beranda dengan badge unread count
+- List notifikasi dengan icon sesuai type (New Report, Completed, dll)
+- Notifikasi disimpan lokal di device (device-specific)
+- **Fitur Hapus Individual**: Icon tong sampah di setiap notifikasi
+- **Hapus Semua**: Menu dropdown untuk clear all notifications
+- Konfirmasi dialog sebelum menghapus
+- **Device Specific**: Hapus notifikasi hanya di perangkat Anda, tidak mempengaruhi user lain
+- Animasi smooth saat menghapus notifikasi
+- Mark as read / Mark all as read
+- Empty state illustration yang menarik
 
 ### ⚙️ Pengaturan
 - Section jelas: Tema, Notifikasi, Privasi, Tentang

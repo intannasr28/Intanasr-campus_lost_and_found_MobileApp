@@ -59,7 +59,8 @@ fun DetailScreen(
     itemId: String,
     onNavigateBack: () -> Unit,
     onNavigateToEdit: ((String) -> Unit)? = null,
-    onNavigateToPublicProfile: ((String) -> Unit)? = null
+    onNavigateToPublicProfile: ((String) -> Unit)? = null,
+    fromActivityScreen: Boolean = false  // Parameter baru untuk membedakan sumber navigasi
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -105,7 +106,8 @@ fun DetailScreen(
                     modifier = Modifier.padding(16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    if (isOwner) {
+                    // Tombol Edit, Hapus, Selesai hanya muncul di Activity Screen
+                    if (isOwner && fromActivityScreen) {
                         // First row: Edit and Selesai
                         Row(
                             modifier = Modifier.fillMaxWidth(),
